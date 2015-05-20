@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Parser examples</title>
+
+        <!-- JavaScript -->
+        <script type="text/javascript" src="../deps/jquery/jquery-1.10.2.js"></script> 
+        <script type="text/javascript" src="../deps/lodash/lodash.compat-2.1.0.js"></script>
+
+        <!-- Parser JavaScript files -->
+        <script type="text/javascript" src="../src/utils.js"></script>
+        <script type="text/javascript" src="../src/wfsrequestparser.js"></script>
+
+        <script type="text/javascript">
+            // Stored query ids.
+            var STORED_QUERY_OBSERVATION = "fmi::observations::weather::multipointcoverage";
+            var STORED_QUERY_FORECAST = "fmi::forecast::hirlam::surface::point::multipointcoverage";
+
+            // URL for server.
+            var SERVER_URL = "http://data.fmi.fi/fmi-apikey/04b1145b-d491-4d85-8a30-c542108ee5b9/wfs";
+
+            /**
+             * This function recursively browses the given {data} structure and appends the content as text
+             * to the {container} element.
+             *
+             * @param {Element} container Content is appended as a text here.
+             * @param {Object|Array|String|etc} data Content that is browsed through recursively.
+             * @param {String} indentStr Indentation string of the previous recursion level.
+             */
+            function showResults(timecont, container, data) {
+                    _.each(data, function(value, key) {
+					 switch (key) {
+					   case "t2m": 
+						outfield = $("#t2m");
+						break;
+					   case "ws_10min": 
+						outfield = $("#ws10min");
+						break;
+					   case "wg_10min": 
+						outfield = $("#wg10min");
+						break;
+						case "wd_10min": 
+						outfield = $("#wd10min");
+						break;
+						case "p_sea": 
+						outfield = $("#psea");
+						break;
+						}	
+					  outfield.append("<br>" + key);
+					   _.each(value.timeValuePairs, function(prop,label) {
+						var date = new Date(prop.time);
+						// hours part from the timestamp
+						var hours = date.getHours();
+						// minutes part from the timestamp
+						var minutes = ("0" + (date.getMinutes())).slice(-2);
+						if (key == "t2m") {
+                        timecont.append("<br>" + hours + ":" + minutes);
+						}						
+						outfield.append("<br>" + prop.value);
+					  });
+					});
+
+            }
+
+            /**
+             * Handle parser results in this callback function.
+             *
+             * Append result strings to the UI.
+             *
+             * @param {Object} data Parsed data.
+             * @param {Object} errors Parser errors.
+             * @param {String} test case name.
+             */
+            function handleCallback(data, errors) {
+				var results = jQuery("#results");
+					var otime = $("#otime");
+
+				results.append("<h3>" + data.locations[0].info.name + "</h3>");
+				otime.append("<br>Time (UTC+3)");
+                if (data) {
+                    showResults(otime, results, data.locations[0].data);
+                }
+            } 
+
+            function getData(url) {
+                // See API documentation and comments from parser source code of
+                // fi.fmi.metoclient.metolib.WfsRequestParser.getData function for the description
+                // of function options parameter object and for the callback parameters objects structures.
+                fi.fmi.metoclient.metolib.WfsRequestParser.getData({
+                    url : url,
+                    storedQueryId : STORED_QUERY_OBSERVATION,
+                    requestParameter : "t2m,ws_10min,wg_10min,wd_10min,p_sea",
+                    // Integer values are used to init dates for older browsers.
+                    // (new Date("2013-05-10T08:00:00Z")).getTime()
+                    // (new Date("2013-05-12T10:00:00Z")).getTime()
+                    end : Math.floor(new Date().getTime() / 600000) * 600000,
+					begin : Math.floor(new Date().getTime() / 600000) * 600000 - 3 * 60 * 60 *1000,
+					fmisid : "100969",
+                    callback : function(data, errors) {
+                        // Handle the data and errors object in a way you choose.
+                        // Here, we delegate the content for a separate handler function.
+                        // See parser documentation from source code comments for more details.
+                        handleCallback(data, errors);
+                    }
+                });
+            }
+
+
+            $(function() {
+                // Run test cases by using functions above.
+
+                // Single station and multi observation.
+                getData(SERVER_URL);
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Parser examples</h1>
+        <p>
+            Notice,
+            <code>
+                fi.fmi.metoclient.metolib.WfsRequestParser
+            </code> source code is well commented.
+            See more information about API and implementation from source code comments.
+        </p>
+        <h2>Parser results (may take a moment before shown):</h2>
+		<div id="results">
+		<!-- headers -->
+		</div>
+<table>
+  <tr>
+    <th style="width:120px"></th>
+	<th style="width:60px"></th>
+    <th style="width:60px"></th>
+	<th style="width:60px"></th>	
+    <th style="width:60px"></th>
+	<th style="width:60px"></th>
+</tr>
+	<tr>
+		<td>
+<div id="otime">
+            <!-- Test results will be appended here. -->
+        </div> </td>
+		<td>
+	<td>	
+        <div id="t2m">
+            <!-- Test results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="ws10min">
+            <!-- Test results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="wg10min">
+            <!-- Test results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="wd10min">
+            <!-- Test results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="psea">
+            <!-- Test results will be appended here. -->
+        </div>
+		</td>
+		</tr>
+		</table>
+    </body>
+</html>

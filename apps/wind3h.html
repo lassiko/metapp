@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>3h tuuli</title>
+
+        <!-- JavaScript -->
+        <script src="../deps/jquery/jquery-1.10.2.js"></script> 
+        <script src="../deps/lodash/lodash.compat-2.1.0.js"></script>
+		<script src="../src/simple_statistics.js"></script>
+		<script src="../src/Chart.js"></script>
+
+        <!-- Parser JavaScript files -->
+        <script src="../lib/utils-1.1.8-min.js"></script>
+        <script src="../lib/wfsrequestparser-1.1.8-min.js"></script>
+
+        <script src="../lib/windcalc.min.js"></script>
+    </head>
+    <body onload="dothis()">
+        <h1>Tuuli</h1>
+		<form id="selform">
+		Valitse asema:
+		<select id="select1" onchange="dothis()">
+			<option value="1">Haapasaari</option>
+			<option value="2">Rankki</option>
+			<option value="3">Orrengrund</option>
+			<option value="4">Em&auml;salo</option>
+			<option value="5">Kalb&aring;dagrund</option>
+			<option value="6">Eestiluoto</option>
+			<option value="7">Harmaja</option>
+			<option value="8">Kasuuni</option>
+			<option value="9">M&auml;kiluoto</option>
+			<option value="10" selected>B&aring;gask&auml;r</option>
+			<option value="11">Jussar&ouml;</option>
+			<option value="12">Tulliniemi</option>
+		</select>
+		</form>
+		<div id="results">
+		<!-- headers -->
+		</div>
+<h4>Tuulen nopeus m/s</h4>
+<canvas id="wind" width="750" height="250"></canvas>
+<h4>Tuulen suunta</h4>
+<canvas id="compass" width="400" height="400"></canvas>
+<p>
+<p>&nbsp;</p>
+Tilastoarvoja tuulesta viimeiselt&auml; kolmelta tunnilta
+<table>
+  <tr>
+    <th style="width:100px"></th>
+    <th style="width:100px"></th>
+    <th style="width:100px"></th>
+    <th style="width:100px"></th>	
+    <th style="width:100px"></th>
+    <th style="width:100px"></th>
+</tr>
+	<tr>
+		<td>
+		<div id="otime">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>	
+        <div id="t2m">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="ws_10min">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="wg_10min">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="wd_10min">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="p_sea">
+            <!-- results will be appended here. -->
+        </div>
+		</td>
+		</tr>
+</table>
+</p>
+</body>
+</html>

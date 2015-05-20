@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Parser examples</title>
+
+        <!-- JavaScript -->
+        <script type="text/javascript" src="../deps/jquery/jquery-1.10.2.js"></script>
+        <script type="text/javascript" src="../deps/lodash/lodash.compat-2.1.0.js"></script>
+
+        <!-- Parser JavaScript files -->
+        <script type="text/javascript" src="../src/utils.js"></script>
+        <script type="text/javascript" src="../src/wfsrequestparser.js"></script>
+
+        <script type="text/javascript">
+            // Stored query ids.
+            var STORED_QUERY_OBSERVATION = "fmi::observations::weather::multipointcoverage";
+            var STORED_QUERY_FORECAST = "fmi::forecast::hirlam::surface::point::multipointcoverage";
+
+            // URL for test server.
+            var TEST_SERVER_URL = "http://data.fmi.fi/fmi-apikey/04b1145b-d491-4d85-8a30-c542108ee5b9/wfs";
+            if (TEST_SERVER_URL.indexOf("04b1145b-d491-4d85-8a30-c542108ee5b9") == -1) {
+                alert("Check parser.html source! TEST_SERVER_URL should contain proper API-key!");
+            }
+
+            /**
+             * This function recursively browses the given {data} structure and appends the content as text
+             * to the {container} element.
+             *
+             * @param {Element} container Content is appended as a text here.
+             * @param {Object|Array|String|etc} data Content that is browsed through recursively.
+             * @param {String} indentStr Indentation string of the previous recursion level.
+             */
+			 
+    /*        function recursiveBrowse(container, data, indentStr) {
+                if (_.isArray(data) || _.isObject(data)) {
+                    // Browse all the child items of the array or object.
+                    _.each(data, function(value, key) {
+                        container.append("<br>" + indentStr + " [" + key + "]");
+                        recursiveBrowse(container, value, indentStr);
+                    });
+
+                } else {
+                    // This is a leaf. So, just append it after its container array or object.
+                    container.append(" > " + data);
+                }
+            } */
+			
+            function recursiveBrowse(container, data) {
+			        _.each(data, function(value, key) {
+						var date = new Date(value.time);
+						// hours part from the timestamp
+						var hours = date.getHours();
+						// minutes part from the timestamp
+						var minutes = ("0" + (date.getMinutes())).slice(-2);
+						// seconds part from the timestamp
+						var seconds = date.getSeconds();
+                        container.append("<br>" + hours + ":" + minutes + ": " + value.value);
+                    });
+					}
+
+            /**
+             * Handle parser results in this callback function.
+             *
+             * Append result strings to the UI.
+             *
+             * @param {Object} data Parsed data.
+             * @param {Object} errors Parser errors.
+             * @param {String} test case name.
+             */
+            function handleCallback(data, errors) {
+                var results = jQuery("#results");
+				results.append("<h3>" + data.locations[0].info.name + "</h3>");
+				results.append(data.properties.temperature.label);
+
+                if (data) {
+                    recursiveBrowse(results, data.locations[0].data.temperature.timeValuePairs, "");
+                }
+            }
+
+            function testTemp(url) {
+                // See API documentation and comments from parser source code of
+                // fi.fmi.metoclient.metolib.WfsRequestParser.getData function for the description
+                // of function options parameter object and for the callback parameters objects structures.
+                fi.fmi.metoclient.metolib.WfsRequestParser.getData({
+                    url : url,
+                    storedQueryId : STORED_QUERY_OBSERVATION,
+                    requestParameter : "temperature",
+                    // Integer values are used to init dates for older browsers.
+                    // (new Date("2013-05-10T08:00:00Z")).getTime()
+                    // (new Date("2013-05-12T10:00:00Z")).getTime()
+                    begin : new Date().getTime() - 3 * 60 * 60 * 1000,
+                    end : new Date().getTime(),
+                 //   timestep : 60 * 60 * 1000,
+                    fmisid : "100969",
+                    callback : function(data, errors) {
+                        // Handle the data and errors object in a way you choose.
+                        // Here, we delegate the content for a separate handler function.
+                        // See parser documentation from source code comments for more details.
+                        handleCallback(data, errors);
+                    }
+                });
+            }
+
+            $(function() {
+                // Run test cases by using functions above.
+
+                // Single station and single observation.
+                testTemp(TEST_SERVER_URL);
+
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Weather data example</h1>
+        <h2>Parser results (may take a moment before shown):</h2>
+        <div id="results">
+            <!-- Test results will be appended here. -->
+        </div>
+    </body>
+</html>

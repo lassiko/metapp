@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>B&aring;gask&auml;r tuuli</title>
+
+        <!-- JavaScript -->
+        <script src="../deps/jquery/jquery-1.10.2.js"></script> 
+        <script src="../deps/lodash/lodash.compat-2.1.0.js"></script>
+		<script src="../src/simple_statistics.js"></script>
+
+        <!-- Parser JavaScript files -->
+        <script src="../src/utils.js"></script>
+        <script src="../src/wfsrequestparser.js"></script>
+
+        <script>
+            // Stored query ids.
+            var STORED_QUERY_OBSERVATION = "fmi::observations::weather::multipointcoverage";
+            var STORED_QUERY_FORECAST = "fmi::forecast::hirlam::surface::point::multipointcoverage";
+
+            // URL for server.
+            var SERVER_URL = "http://data.fmi.fi/fmi-apikey/04b1145b-d491-4d85-8a30-c542108ee5b9/wfs";
+
+            /**
+			esitt‰‰ havainnot omissa sarakkeissaan
+			*/
+            function showResults(timecont, container, data) {
+                    _.each(data, function(value, key) {
+					 switch (key) {
+					   case "t2m": 
+						outfield = $("#t2m");
+						break;
+					   case "ws_10min": 
+						outfield = $("#ws10min");
+						break;
+					   case "wg_10min": 
+						outfield = $("#wg10min");
+						break;
+						case "wd_10min": 
+						outfield = $("#wd10min");
+						break;
+						case "p_sea": 
+						outfield = $("#psea");
+						break;
+						}	
+					  outfield.append("<br>" + key);
+					   var measure = new Array();
+					   var mtime = new Array();
+					   var lreg = new Array();
+					   lreg[0] = new Array();
+					   lreg[1] = new Array();
+					   
+					   var vcount = 0;
+					   var a = 0;
+					   var b = 0;
+					   var c = 0;
+					   var d = 0;
+					   var xs = 0;
+					   var ys = 0;
+					   _.each(value.timeValuePairs, function(prop,label) {
+						mtime[vcount] = new Date(prop.time);
+						// hours part from the timestamp
+						measure[vcount] = prop.value;
+						lreg[0][vcount] = vcount;
+						lreg[1][vcount] = prop.value;
+						vcount += 1;
+					  });
+					    ysd = ss.sample_standard_deviation(measure);
+					    xsd = ss.sample_standard_deviation(lreg[0]);
+					    corr = ss.sample_correlation(lreg[0],measure);
+	 				    outfield.append("<br> n:" + measure.length);
+						outfield.append("<br> Min:" + ss.min(measure));
+						outfield.append("<br> Max:" + ss.max(measure));
+						outfield.append("<br> KA:" + ss.mean(measure).toFixed(1));
+						outfield.append("<br> Muutos:" + (6*corr*ysd/xsd).toFixed(2));
+						
+					});
+
+            }
+
+            /**
+			Alustaa tulostusmuuttujat ja kutsuu tulostusfunktiota
+			*/
+            function handleCallback(data, errors) {
+				var results = jQuery("#results");
+					var otime = $("#otime");
+
+				results.append("<h3>" + data.locations[0].info.name + "</h3>");
+				otime.append("<br>Time (UTC+3)");
+                if (data) {
+                    showResults(otime, results, data.locations[0].data);
+                }
+            } 
+
+            function getData(url) {
+                // See API documentation and comments from parser source code of
+                // fi.fmi.metoclient.metolib.WfsRequestParser.getData function for the description
+                // of function options parameter object and for the callback parameters objects structures.
+                fi.fmi.metoclient.metolib.WfsRequestParser.getData({
+                    url : url,
+                    storedQueryId : STORED_QUERY_OBSERVATION,
+                    requestParameter : "t2m,ws_10min,wg_10min,wd_10min,p_sea",
+                    // Viimeisest‰ havainnosta kolme tuntia taaksep‰in
+                    end : Math.floor(new Date().getTime() / 600000) * 600000,
+					begin : Math.floor(new Date().getTime() / 600000) * 600000 - 3 * 60 * 60 *1000,
+					fmisid : "100969",
+                    callback : function(data, errors) {
+                        // Handle the data and errors object in a way you choose.
+                        // Here, we delegate the content for a separate handler function.
+                        // See parser documentation from source code comments for more details.
+                        handleCallback(data, errors);
+                    }
+                });
+            }
+
+            $(function() {
+                getData(SERVER_URL);
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Tuuli</h1>
+        <p>
+			Tilastoarvoja tuulesta viimeiselt&auml; kolmelta tunnilta
+        </p>
+		<div id="results">
+		<!-- headers -->
+		</div>
+<table>
+  <tr>
+    <th style="width:120px"></th>
+	<th style="width:75px"></th>
+    <th style="width:75px"></th>
+	<th style="width:75px"></th>	
+    <th style="width:75px"></th>
+	<th style="width:75px"></th>
+</tr>
+	<tr>
+		<td>
+<div id="otime">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>
+	<td>	
+        <div id="t2m">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="ws10min">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="wg10min">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="wd10min">
+            <!-- results will be appended here. -->
+        </div> </td>
+		<td>
+<div id="psea">
+            <!-- results will be appended here. -->
+        </div>
+		</td>
+		</tr>
+		</table>
+    </body>
+</html>
